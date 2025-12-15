@@ -61,8 +61,12 @@ export const createOrder = mutation({
       customerEmail: args.customerEmail,
       customerName: args.customerName,
       shippingAddress: args.shippingAddress,
+      storeLocationId: undefined, // Can be added later if needed
       status: "pending",
-      total,
+      subtotal: total, // For legacy compatibility, subtotal = total if no pickup fee
+      pickupFee: undefined, // Can be calculated later if needed
+      total: total,
+      paymentMethod: undefined, // Can be added later if needed
       createdAt: now,
       updatedAt: now,
     });

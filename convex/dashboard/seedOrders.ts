@@ -88,8 +88,12 @@ export const generateDummyOrders = mutation({
         customerEmail: customerEmails[customerIndex],
         customerName: customerNames[customerIndex],
         shippingAddress: addresses[Math.floor(Math.random() * addresses.length)],
+        storeLocationId: undefined, // Can be set if needed
         status,
+        subtotal: total, // For seed data, subtotal = total
+        pickupFee: undefined, // Can be calculated if needed
         total,
+        paymentMethod: undefined, // Can be set if needed
         createdAt,
         updatedAt: createdAt,
       });
@@ -103,4 +107,3 @@ export const generateDummyOrders = mutation({
     };
   },
 });
-

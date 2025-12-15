@@ -6,6 +6,7 @@ import DashboardLayout from './components/DashboardLayout'
 const ProductsPage = lazy(() => import('./pages/ProductsPage'))
 const OrdersPage = lazy(() => import('./pages/OrdersPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
+const CategoriesPage = lazy(() => import('./pages/CategoriesPage'))
 
 // Loading component
 const PageLoader = () => (
@@ -43,6 +44,14 @@ function App() {
             element={
               <Suspense fallback={<PageLoader />}>
                 <AnalyticsPage />
+              </Suspense>
+            } 
+          />
+          <Route 
+            path="categories" 
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <CategoriesPage />
               </Suspense>
             } 
           />

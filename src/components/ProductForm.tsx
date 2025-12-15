@@ -13,17 +13,24 @@ function ProductForm({ productId, onClose }: ProductFormProps) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [price, setPrice] = useState('')
+  const [originalPrice, setOriginalPrice] = useState('')
   const [category, setCategory] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [stock, setStock] = useState('')
+  const [unit, setUnit] = useState('')
+  const [isLocal, setIsLocal] = useState(false)
+  const [tags, setTags] = useState('')
   const [isActive, setIsActive] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Get categories for dropdown
+  const categories = useQuery(api.dashboard.categories.getAll)
 
   const product = useQuery(
     api.dashboard.products.getById,
@@ -39,10 +46,14 @@ function ProductForm({ productId, onClose }: ProductFormProps) {
       setName(product.name)
       setDescription(product.description)
       setPrice(product.price.toString())
+      setOriginalPrice(product.originalPrice?.toString() || '')
       setCategory(product.category)
       setImageUrl(product.imageUrl || '')
       setImagePreview(product.imageUrl || null)
       setStock(product.stock.toString())
+      setUnit(product.unit || '')
+      setIsLocal(product.isLocal || false)
+      setTags(product.tags?.join(', ') || '')
       setIsActive(product.isActive)
     }
   }, [product])
@@ -132,9 +143,14 @@ function ProductForm({ productId, onClose }: ProductFormProps) {
       name,
       description,
       price: parseFloat(price),
+      originalPrice: originalPrice ? parseFloat(originalPrice) : undefined,
       category,
       imageUrl: finalImageUrl || undefined,
       stock: parseInt(stock),
+      unit: unit || undefined,
+      isLocal: isLocal,
+      tags: tags ? tags.split(',').map(t => t.trim()).filter(t => t) : undefined,
+      inStock: parseInt(stock) > 0,
     }
 
     try {
@@ -195,7 +211,7 @@ function ProductForm({ productId, onClose }: ProductFormProps) {
               onChange={(e) => setName(e.target.value)}
               required
               disabled={isSubmitting}
-              className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
+              className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans bg-transparent transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
             />
           </div>
 
@@ -208,7 +224,7 @@ function ProductForm({ productId, onClose }: ProductFormProps) {
               required
               rows={4}
               disabled={isSubmitting}
-              className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
+              className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans bg-transparent transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
             />
           </div>
 
@@ -224,10 +240,27 @@ function ProductForm({ productId, onClose }: ProductFormProps) {
                 onChange={(e) => setPrice(e.target.value)}
                 required
                 disabled={isSubmitting}
-                className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
+                className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans bg-transparent transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
               />
             </div>
 
+            <div>
+              <label htmlFor="originalPrice" className="block mb-2 font-semibold text-gray-800 text-sm">Original Price (€)</label>
+              <input
+                id="originalPrice"
+                type="number"
+                step="0.01"
+                min="0"
+                value={originalPrice}
+                onChange={(e) => setOriginalPrice(e.target.value)}
+                placeholder="For discounted items"
+                disabled={isSubmitting}
+                className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans bg-transparent transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <div>
               <label htmlFor="stock" className="block mb-2 font-semibold text-gray-800 text-sm">Stock *</label>
               <input
@@ -238,22 +271,77 @@ function ProductForm({ productId, onClose }: ProductFormProps) {
                 onChange={(e) => setStock(e.target.value)}
                 required
                 disabled={isSubmitting}
-                className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
+                className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans bg-transparent transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
               />
+            </div>
+
+            <div>
+              <label htmlFor="unit" className="block mb-2 font-semibold text-gray-800 text-sm">Unit</label>
+              <select
+                id="unit"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                disabled={isSubmitting}
+                className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans bg-transparent transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
+              >
+                <option value="">Select unit</option>
+                <option value="piece">Piece</option>
+                <option value="kg">Kilogram (kg)</option>
+                <option value="g">Gram (g)</option>
+                <option value="liter">Liter</option>
+                <option value="ml">Milliliter (ml)</option>
+                <option value="pack">Pack</option>
+              </select>
             </div>
           </div>
 
           <div className="mb-6">
             <label htmlFor="category" className="block mb-2 font-semibold text-gray-800 text-sm">Category *</label>
-            <input
+            <select
               id="category"
-              type="text"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               required
               disabled={isSubmitting}
-              className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
+              className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans bg-transparent transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
+            >
+              <option value="">Select a category</option>
+              {categories?.map((cat) => (
+                <option key={cat._id} value={cat.slug}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            {categories && categories.length === 0 && (
+              <p className="text-sm text-gray-500 mt-2">No categories found. Please create categories first.</p>
+            )}
+          </div>
+
+          <div className="mb-6">
+            <label htmlFor="tags" className="block mb-2 font-semibold text-gray-800 text-sm">Tags</label>
+            <input
+              id="tags"
+              type="text"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder="Comma-separated tags (e.g., organic, fresh, local)"
+              disabled={isSubmitting}
+              className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans bg-transparent transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
             />
+            <p className="text-xs text-gray-500 mt-1">Separate multiple tags with commas</p>
+          </div>
+
+          <div className="mb-6">
+            <label className="flex items-center gap-2 cursor-pointer font-normal">
+              <input
+                type="checkbox"
+                checked={isLocal}
+                onChange={(e) => setIsLocal(e.target.checked)}
+                disabled={isSubmitting}
+                className="cursor-pointer"
+              />
+              Local Product (appears in local products section)
+            </label>
           </div>
 
           <div className="mb-6">

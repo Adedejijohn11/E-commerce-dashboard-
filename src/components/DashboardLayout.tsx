@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { BarChart3, Package, Menu, X, ShoppingCart } from 'lucide-react'
+import { BarChart3, Package, Menu, X, ShoppingCart, FolderTree } from 'lucide-react'
 import ConvexSetupMessage from './ConvexSetupMessage'
 import ConvexConnectionStatus from './ConvexConnectionStatus'
 import logo from '../assets/logo.jpg'
@@ -15,6 +15,12 @@ function DashboardLayout() {
       href: '/',
       icon: Package,
       active: location.pathname === '/',
+    },
+    {
+      name: 'Categories',
+      href: '/categories',
+      icon: FolderTree,
+      active: location.pathname === '/categories',
     },
     {
       name: 'Orders',

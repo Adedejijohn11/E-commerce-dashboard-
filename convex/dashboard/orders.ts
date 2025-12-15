@@ -107,16 +107,27 @@ export const create = mutation({
     customerEmail: v.optional(v.string()),
     customerName: v.optional(v.string()),
     shippingAddress: v.optional(v.string()),
+    storeLocationId: v.optional(v.string()),
+    subtotal: v.optional(v.number()),
+    pickupFee: v.optional(v.number()),
     total: v.number(),
+    paymentMethod: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
     return await ctx.db.insert("orders", {
-      ...args,
+      orderId: args.orderId,
+      customerEmail: args.customerEmail,
+      customerName: args.customerName,
+      shippingAddress: args.shippingAddress,
+      storeLocationId: args.storeLocationId,
       status: "pending",
+      subtotal: args.subtotal,
+      pickupFee: args.pickupFee,
+      total: args.total,
+      paymentMethod: args.paymentMethod,
       createdAt: now,
       updatedAt: now,
     });
   },
 });
-

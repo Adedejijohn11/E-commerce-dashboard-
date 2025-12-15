@@ -25,15 +25,35 @@ export const create = mutation({
     name: v.string(),
     description: v.string(),
     price: v.number(),
+    originalPrice: v.optional(v.number()),
     category: v.string(),
     imageUrl: v.optional(v.string()),
+    images: v.optional(v.array(v.string())),
     stock: v.number(),
+    isLocal: v.optional(v.boolean()),
+    unit: v.optional(v.string()),
+    inStock: v.optional(v.boolean()),
+    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
+    // Set inStock based on stock if not provided
+    const inStock = args.inStock !== undefined ? args.inStock : args.stock > 0;
+    
     return await ctx.db.insert("products", {
-      ...args,
+      name: args.name,
+      description: args.description,
+      price: args.price,
+      originalPrice: args.originalPrice,
+      category: args.category,
+      imageUrl: args.imageUrl,
+      images: args.images,
+      stock: args.stock,
       isActive: true,
+      isLocal: args.isLocal || false,
+      unit: args.unit,
+      inStock: inStock,
+      tags: args.tags,
       createdAt: now,
       updatedAt: now,
     });
@@ -47,10 +67,16 @@ export const update = mutation({
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     price: v.optional(v.number()),
+    originalPrice: v.optional(v.number()),
     category: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
+    images: v.optional(v.array(v.string())),
     stock: v.optional(v.number()),
     isActive: v.optional(v.boolean()),
+    isLocal: v.optional(v.boolean()),
+    unit: v.optional(v.string()),
+    inStock: v.optional(v.boolean()),
+    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
@@ -58,6 +84,12 @@ export const update = mutation({
     if (!existing) {
       throw new Error("Product not found");
     }
+    
+    // Update inStock if stock is being updated
+    if (updates.stock !== undefined && updates.inStock === undefined) {
+      updates.inStock = updates.stock > 0;
+    }
+    
     await ctx.db.patch(id, {
       ...updates,
       updatedAt: Date.now(),
@@ -88,4 +120,3 @@ export const getStorageUrl = mutation({
     return await ctx.storage.getUrl(args.storageId);
   },
 });
-
