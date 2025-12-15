@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
-import { Plus, Edit2, Trash2, X, Loader2 } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Loader2, Database } from 'lucide-react'
 
 function CategoriesPage() {
   const categories = useQuery(api.dashboard.categories.getAll)
   const createCategory = useMutation(api.dashboard.categories.create)
   const updateCategory = useMutation(api.dashboard.categories.update)
   const deleteCategory = useMutation(api.dashboard.categories.remove)
+  const seedDefaultCategories = useMutation(api.dashboard.categories.seedDefault)
 
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Id<'categories'> | null>(null)
@@ -17,6 +18,8 @@ function CategoriesPage() {
   const [description, setDescription] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isSeeding, setIsSeeding] = useState(false)
+  const [seedMessage, setSeedMessage] = useState<string | null>(null)
 
   const handleOpenForm = (categoryId?: Id<'categories'>) => {
     if (categoryId) {
@@ -109,18 +112,88 @@ function CategoriesPage() {
     }
   }
 
+  const handleSeedDefault = async () => {
+    if (!confirm('This will create default categories (Bakery, Fruits & Vegetables, Meat & Fish, etc.) if they don\'t already exist. Continue?')) {
+      return
+    }
+
+    setIsSeeding(true)
+    setSeedMessage(null)
+    setError(null)
+
+    try {
+      // Check if the function is available
+      if (!seedDefaultCategories) {
+        throw new Error('Seed function not available. Please make sure Convex dev server is running (npx convex dev)')
+      }
+
+      const result = await seedDefaultCategories()
+      
+      if (result && result.message) {
+        setSeedMessage(result.message)
+        // Clear message after 5 seconds
+        setTimeout(() => setSeedMessage(null), 5000)
+      } else {
+        setError('Unexpected response from server. Please try again.')
+      }
+    } catch (error: any) {
+      console.error('Error seeding categories:', error)
+      
+      // Provide more helpful error messages
+      let errorMessage = 'Failed to seed default categories. '
+      
+      if (error?.message?.includes('Could not find public function')) {
+        errorMessage += 'The Convex function has not been synced. Please run `npx convex dev` in the dashboard directory and wait for functions to sync.'
+      } else if (error?.message?.includes('not available')) {
+        errorMessage += error.message
+      } else {
+        errorMessage += error?.message || 'Please try again.'
+      }
+      
+      setError(errorMessage)
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800">Categories Management</h1>
-        <button
-          onClick={() => handleOpenForm()}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-green text-white rounded-lg font-semibold shadow-sm hover:bg-dark-green hover:shadow-md transition-all"
-        >
-          <Plus size={20} />
-          Add Category
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleSeedDefault}
+            disabled={isSeeding}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow-sm hover:bg-blue-700 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSeeding ? (
+              <>
+                <Loader2 size={20} className="animate-spin" />
+                Seeding...
+              </>
+            ) : (
+              <>
+                <Database size={20} />
+                Seed Default Categories
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => handleOpenForm()}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-green text-white rounded-lg font-semibold shadow-sm hover:bg-dark-green hover:shadow-md transition-all"
+          >
+            <Plus size={20} />
+            Add Category
+          </button>
+        </div>
       </div>
+
+      {/* Seed Success Message */}
+      {seedMessage && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-sm text-green-700">{seedMessage}</p>
+        </div>
+      )}
 
       {/* Categories List */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">

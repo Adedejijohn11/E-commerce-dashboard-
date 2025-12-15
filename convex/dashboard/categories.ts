@@ -94,3 +94,81 @@ export const remove = mutation({
     await ctx.db.delete(args.id);
   },
 });
+
+// Dashboard: Seed default categories (idempotent)
+export const seedDefault = mutation({
+  handler: async (ctx) => {
+    const defaultCategories = [
+      {
+        name: "Bakery",
+        slug: "bakery",
+        description: "Fresh bread, pastries, cakes, and baked goods",
+      },
+      {
+        name: "Fruits & Vegetables",
+        slug: "fruits-&-vegetables",
+        description: "Fresh fruits and vegetables, organic options available",
+      },
+      {
+        name: "Meat & Fish",
+        slug: "meat-&-fish",
+        description: "Fresh meat, poultry, and seafood",
+      },
+      {
+        name: "Cheese & Cold Cuts",
+        slug: "cheese-&-coldcuts",
+        description: "Artisanal cheeses, deli meats, and charcuterie",
+      },
+      {
+        name: "Drinks & Beverages",
+        slug: "drinks-&-beverages",
+        description: "Soft drinks, juices, water, and alcoholic beverages",
+      },
+      {
+        name: "Snacks & Sweets",
+        slug: "snacks-&-sweets",
+        description: "Chips, cookies, chocolates, and confectionery",
+      },
+      {
+        name: "Pet Supplies",
+        slug: "pet-supplies",
+        description: "Food, treats, and accessories for your pets",
+      },
+    ];
+
+    const createdCategories = [];
+    const skippedCategories = [];
+
+    for (const category of defaultCategories) {
+      // Check if category with this slug already exists
+      const existing = await ctx.db
+        .query("categories")
+        .withIndex("by_slug", (q) => q.eq("slug", category.slug))
+        .first();
+
+      if (existing) {
+        skippedCategories.push(category.slug);
+        continue;
+      }
+
+      // Create the category
+      const categoryId = await ctx.db.insert("categories", {
+        name: category.name,
+        slug: category.slug,
+        description: category.description,
+      });
+
+      createdCategories.push({
+        id: categoryId,
+        name: category.name,
+        slug: category.slug,
+      });
+    }
+
+    return {
+      message: `Seeded ${createdCategories.length} categories. ${skippedCategories.length} already existed.`,
+      created: createdCategories,
+      skipped: skippedCategories,
+    };
+  },
+});
