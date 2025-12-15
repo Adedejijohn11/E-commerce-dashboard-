@@ -27,10 +27,15 @@ function ProductForm({ productId, onClose }: ProductFormProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [isOnSale, setIsOnSale] = useState(false)
+  const [discountPercentage, setDiscountPercentage] = useState('')
+  const [saleStartDate, setSaleStartDate] = useState('')
+  const [saleEndDate, setSaleEndDate] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   // Get categories for dropdown
   const categories = useQuery(api.dashboard.categories.getAll)
+  const createPromotion = useMutation(api.frontend.promotions.create)
 
   const product = useQuery(
     api.dashboard.products.getById,
@@ -55,6 +60,8 @@ function ProductForm({ productId, onClose }: ProductFormProps) {
       setIsLocal(product.isLocal || false)
       setTags(product.tags?.join(', ') || '')
       setIsActive(product.isActive)
+      // Check if product is on sale (has originalPrice)
+      setIsOnSale(!!product.originalPrice)
     }
   }, [product])
 
@@ -154,19 +161,41 @@ function ProductForm({ productId, onClose }: ProductFormProps) {
     }
 
     try {
+      let savedProductId: Id<'products'>
+      
       if (productId) {
         await updateProduct({ id: productId, ...productData, isActive })
-        setSuccess(true)
-        setTimeout(() => {
-          onClose()
-        }, 500)
+        savedProductId = productId
       } else {
-        await createProduct(productData)
-        setSuccess(true)
-        setTimeout(() => {
-          onClose()
-        }, 500)
+        savedProductId = await createProduct(productData)
       }
+
+      // Handle promotion
+      if (isOnSale && discountPercentage && saleStartDate && saleEndDate) {
+        const startDate = new Date(saleStartDate).getTime()
+        const endDate = new Date(saleEndDate).getTime()
+        const discount = parseFloat(discountPercentage)
+        
+        if (discount > 0 && discount <= 100 && endDate > startDate) {
+          try {
+            await createPromotion({
+              productId: savedProductId,
+              discountPercentage: discount,
+              startDate,
+              endDate,
+            })
+          } catch (promoError: any) {
+            console.error('Error creating promotion:', promoError)
+            // Don't fail the whole operation if promotion fails
+            setError(`Product saved but promotion failed: ${promoError?.message || 'Unknown error'}`)
+          }
+        }
+      }
+
+      setSuccess(true)
+      setTimeout(() => {
+        onClose()
+      }, 500)
     } catch (error: any) {
       console.error('Error saving product:', error)
       setError(error?.message || 'Failed to save product. Please check your Convex connection and try again.')
@@ -342,6 +371,98 @@ function ProductForm({ productId, onClose }: ProductFormProps) {
               />
               Local Product (appears in local products section)
             </label>
+          </div>
+
+          {/* Promotion Section */}
+          <div className="mb-6 p-4 border-2 border-gray-200 rounded-lg bg-gray-50">
+            <label className="flex items-center gap-2 cursor-pointer font-semibold mb-4">
+              <input
+                type="checkbox"
+                checked={isOnSale}
+                onChange={(e) => {
+                  setIsOnSale(e.target.checked)
+                  if (e.target.checked) {
+                    // Set default dates: start today, end in 7 days
+                    const today = new Date()
+                    const nextWeek = new Date(today)
+                    nextWeek.setDate(today.getDate() + 7)
+                    setSaleStartDate(today.toISOString().split('T')[0])
+                    setSaleEndDate(nextWeek.toISOString().split('T')[0])
+                    if (!discountPercentage) {
+                      setDiscountPercentage('10')
+                    }
+                  }
+                }}
+                disabled={isSubmitting}
+                className="cursor-pointer"
+              />
+              Add to Weekly Promotions
+            </label>
+            
+            {isOnSale && (
+              <div className="mt-4 space-y-4">
+                <div>
+                  <label htmlFor="discountPercentage" className="block mb-2 font-semibold text-gray-800 text-sm">
+                    Discount Percentage (%)
+                  </label>
+                  <input
+                    id="discountPercentage"
+                    type="number"
+                    min="1"
+                    max="100"
+                    step="1"
+                    value={discountPercentage}
+                    onChange={(e) => setDiscountPercentage(e.target.value)}
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans bg-white transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
+                    placeholder="e.g., 20"
+                  />
+                  {discountPercentage && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Product will be discounted by {discountPercentage}%
+                    </p>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="saleStartDate" className="block mb-2 font-semibold text-gray-800 text-sm">
+                      Sale Start Date *
+                    </label>
+                    <input
+                      id="saleStartDate"
+                      type="date"
+                      value={saleStartDate}
+                      onChange={(e) => setSaleStartDate(e.target.value)}
+                      required={isOnSale}
+                      disabled={isSubmitting}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans bg-white transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="saleEndDate" className="block mb-2 font-semibold text-gray-800 text-sm">
+                      Sale End Date *
+                    </label>
+                    <input
+                      id="saleEndDate"
+                      type="date"
+                      value={saleEndDate}
+                      onChange={(e) => setSaleEndDate(e.target.value)}
+                      required={isOnSale}
+                      disabled={isSubmitting}
+                      min={saleStartDate || new Date().toISOString().split('T')[0]}
+                      className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base font-sans bg-white transition-all focus:outline-none focus:border-primary-green focus:ring-3 focus:ring-light-green disabled:bg-gray-100"
+                    />
+                  </div>
+                </div>
+                
+                <p className="text-xs text-gray-500 mt-2">
+                  This product will appear on the Weekly Promotions page during the sale period.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="mb-6">
