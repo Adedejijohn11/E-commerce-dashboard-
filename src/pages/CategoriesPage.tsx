@@ -174,7 +174,7 @@ function CategoriesPage() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800">Categories Management</h1>
         <div className="flex items-center gap-3">
-          <button
+          {/* <button
             onClick={handleSeedDefault}
             disabled={isSeeding}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow-sm hover:bg-blue-700 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -190,7 +190,7 @@ function CategoriesPage() {
                 Seed Default Categories
               </>
             )}
-          </button>
+          </button> */}
           <button
             onClick={() => handleOpenForm()}
             className="flex items-center gap-2 px-4 py-2 bg-primary-green text-white rounded-lg font-semibold shadow-sm hover:bg-dark-green hover:shadow-md transition-all"

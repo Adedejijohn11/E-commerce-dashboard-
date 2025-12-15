@@ -106,14 +106,14 @@ function OrdersPage() {
     <div className="w-full">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800">Orders Management</h1>
-        <button
+        {/* <button
           onClick={handleGenerateDummyOrders}
           disabled={isGenerating}
           className="flex items-center gap-2 px-4 py-2 bg-primary-green text-white rounded-lg font-semibold shadow-sm hover:bg-dark-green hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus size={20} />
           {isGenerating ? 'Generating...' : 'Generate Test Orders'}
-        </button>
+        </button> */}
       </div>
 
       {/* Status Filters */}
