@@ -135,6 +135,7 @@ function CategoriesPage() {
         console.log(`Success: ${result.message}`)
         console.log('Created:', result.created)
         console.log('Skipped:', result.skipped)
+        setIsSeeding(false) // Reset loading state on success
         // Clear message after 8 seconds
         setTimeout(() => setSeedMessage(null), 8000)
       } else {

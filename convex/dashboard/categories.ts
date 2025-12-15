@@ -100,6 +100,11 @@ export const seedDefault = mutation({
   handler: async (ctx) => {
     const defaultCategories = [
       {
+        name: "Local Products",
+        slug: "localproducts",
+        description: "Locally sourced and produced products",
+      },
+      {
         name: "Bakery",
         slug: "bakery",
         description: "Fresh bread, pastries, cakes, and baked goods",
@@ -115,14 +120,14 @@ export const seedDefault = mutation({
         description: "Fresh meat, poultry, and seafood",
       },
       {
+        name: "Dairy & Eggs",
+        slug: "dairy-&-eggs",
+        description: "Fresh dairy products, milk, cheese, and eggs",
+      },
+      {
         name: "Cheese & Cold Cuts",
         slug: "cheese-&-coldcuts",
         description: "Artisanal cheeses, deli meats, and charcuterie",
-      },
-      {
-        name: "Drinks & Beverages",
-        slug: "drinks-&-beverages",
-        description: "Soft drinks, juices, water, and alcoholic beverages",
       },
       {
         name: "Snacks & Sweets",
@@ -130,9 +135,19 @@ export const seedDefault = mutation({
         description: "Chips, cookies, chocolates, and confectionery",
       },
       {
+        name: "Drinks & Beverages",
+        slug: "drinks-&-beverages",
+        description: "Soft drinks, juices, water, and alcoholic beverages",
+      },
+      {
         name: "Pet Supplies",
         slug: "pet-supplies",
         description: "Food, treats, and accessories for your pets",
+      },
+      {
+        name: "Weekly Promotions",
+        slug: "weekly-promotions",
+        description: "Special deals and promotions available this week",
       },
     ];
 
