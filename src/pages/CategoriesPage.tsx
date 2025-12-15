@@ -122,36 +122,48 @@ function CategoriesPage() {
     setError(null)
 
     try {
-      // Check if the function is available
-      if (!seedDefaultCategories) {
-        throw new Error('Seed function not available. Please make sure Convex dev server is running (npx convex dev)')
-      }
-
+      console.log('Attempting to seed default categories...')
+      console.log('seedDefaultCategories function:', seedDefaultCategories)
+      
+      // Call the seed function
       const result = await seedDefaultCategories()
+      
+      console.log('Seed result:', result)
       
       if (result && result.message) {
         setSeedMessage(result.message)
-        // Clear message after 5 seconds
-        setTimeout(() => setSeedMessage(null), 5000)
+        console.log(`Success: ${result.message}`)
+        console.log('Created:', result.created)
+        console.log('Skipped:', result.skipped)
+        // Clear message after 8 seconds
+        setTimeout(() => setSeedMessage(null), 8000)
       } else {
+        console.error('Unexpected result format:', result)
         setError('Unexpected response from server. Please try again.')
+        setIsSeeding(false)
       }
     } catch (error: any) {
       console.error('Error seeding categories:', error)
+      console.error('Error details:', {
+        message: error?.message,
+        name: error?.name,
+        stack: error?.stack
+      })
       
       // Provide more helpful error messages
       let errorMessage = 'Failed to seed default categories. '
       
-      if (error?.message?.includes('Could not find public function')) {
-        errorMessage += 'The Convex function has not been synced. Please run `npx convex dev` in the dashboard directory and wait for functions to sync.'
-      } else if (error?.message?.includes('not available')) {
+      if (error?.message?.includes('Could not find public function') || 
+          error?.message?.includes('not found') ||
+          error?.message?.includes('dashboard/categories:seedDefault')) {
+        errorMessage += 'The Convex function has not been synced. Please run `npx convex dev` in the dashboard directory and wait for functions to sync. Then refresh this page.'
+      } else if (error?.message) {
         errorMessage += error.message
       } else {
-        errorMessage += error?.message || 'Please try again.'
+        errorMessage += 'Please make sure Convex dev server is running and try again.'
       }
       
       setError(errorMessage)
-    } finally {
       setIsSeeding(false)
     }
   }
