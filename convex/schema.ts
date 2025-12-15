@@ -51,7 +51,8 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_status", ["status"])
-    .index("by_date", ["createdAt"]),
+    .index("by_date", ["createdAt"])
+    .index("by_orderId", ["orderId"]),
 
   // Shopping Cart
   cartItems: defineTable({

@@ -1,5 +1,103 @@
-import { mutation } from "../_generated/server";
+import { query, mutation } from "../_generated/server";
 import { v } from "convex/values";
+
+// Frontend: Get order by orderId
+export const getByOrderId = query({
+  args: { orderId: v.string() },
+  handler: async (ctx, args) => {
+    if (!args.orderId || args.orderId.trim() === "") {
+      return null;
+    }
+
+    try {
+      // Try with index first, fallback to filter if index doesn't exist
+      let order;
+      try {
+        order = await ctx.db
+          .query("orders")
+          .withIndex("by_orderId", (q: any) => q.eq("orderId", args.orderId))
+          .first();
+      } catch (indexError) {
+        // Index might not exist yet, fallback to filter
+        order = await ctx.db
+          .query("orders")
+          .filter((q: any) => q.eq(q.field("orderId"), args.orderId))
+          .first();
+      }
+      
+      if (!order) {
+        return null;
+      }
+
+      // Get sales/order items for this order
+      let sales;
+      try {
+        sales = await ctx.db
+          .query("sales")
+          .withIndex("by_order", (q: any) => q.eq("orderId", args.orderId))
+          .collect();
+      } catch (indexError) {
+        // Fallback to filter if index doesn't exist
+        sales = await ctx.db
+          .query("sales")
+          .filter((q: any) => q.eq(q.field("orderId"), args.orderId))
+          .collect();
+      }
+
+      // Enrich with product data
+      const items = await Promise.all(
+        sales.map(async (sale) => {
+          try {
+            const product = sale.productId ? await ctx.db.get(sale.productId) : null;
+            return {
+              _id: sale._id,
+              productId: sale.productId,
+              quantity: sale.quantity,
+              price: sale.price,
+              total: sale.total,
+              orderId: sale.orderId,
+              createdAt: sale.createdAt,
+              product: product || null,
+            };
+          } catch (error) {
+            // If product lookup fails, return sale without product
+            return {
+              _id: sale._id,
+              productId: sale.productId,
+              quantity: sale.quantity,
+              price: sale.price,
+              total: sale.total,
+              orderId: sale.orderId,
+              createdAt: sale.createdAt,
+              product: null,
+            };
+          }
+        })
+      );
+
+      return {
+        _id: order._id,
+        orderId: order.orderId,
+        customerEmail: order.customerEmail,
+        customerName: order.customerName,
+        shippingAddress: order.shippingAddress,
+        storeLocationId: order.storeLocationId,
+        status: order.status,
+        subtotal: order.subtotal,
+        pickupFee: order.pickupFee,
+        total: order.total,
+        paymentMethod: order.paymentMethod,
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
+        items,
+      };
+    } catch (error) {
+      // Log error but return null instead of throwing to prevent UI crashes
+      console.error("Error in getByOrderId:", error);
+      return null;
+    }
+  },
+});
 
 // Frontend: Create order (for customer purchases)
 export const createOrder = mutation({
