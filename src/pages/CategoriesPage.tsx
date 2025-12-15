@@ -2,14 +2,14 @@ import { useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
-import { Plus, Edit2, Trash2, X, Loader2, Database } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Loader2 } from 'lucide-react'
 
 function CategoriesPage() {
   const categories = useQuery(api.dashboard.categories.getAll)
   const createCategory = useMutation(api.dashboard.categories.create)
   const updateCategory = useMutation(api.dashboard.categories.update)
   const deleteCategory = useMutation(api.dashboard.categories.remove)
-  const seedDefaultCategories = useMutation(api.dashboard.categories.seedDefault)
+  // const seedDefaultCategories = useMutation(api.dashboard.categories.seedDefault)
 
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Id<'categories'> | null>(null)
@@ -18,8 +18,8 @@ function CategoriesPage() {
   const [description, setDescription] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isSeeding, setIsSeeding] = useState(false)
-  const [seedMessage, setSeedMessage] = useState<string | null>(null)
+  // const [isSeeding, setIsSeeding] = useState(false)
+  // const [seedMessage, setSeedMessage] = useState<string | null>(null)
 
   const handleOpenForm = (categoryId?: Id<'categories'>) => {
     if (categoryId) {
@@ -112,62 +112,62 @@ function CategoriesPage() {
     }
   }
 
-  const handleSeedDefault = async () => {
-    if (!confirm('This will create default categories (Bakery, Fruits & Vegetables, Meat & Fish, etc.) if they don\'t already exist. Continue?')) {
-      return
-    }
+  // const handleSeedDefault = async () => {
+  //   if (!confirm('This will create default categories (Bakery, Fruits & Vegetables, Meat & Fish, etc.) if they don\'t already exist. Continue?')) {
+  //     return
+  //   }
 
-    setIsSeeding(true)
-    setSeedMessage(null)
-    setError(null)
+  //   setIsSeeding(true)
+  //   setSeedMessage(null)
+  //   setError(null)
 
-    try {
-      console.log('Attempting to seed default categories...')
-      console.log('seedDefaultCategories function:', seedDefaultCategories)
+  //   try {
+  //     console.log('Attempting to seed default categories...')
+  //     console.log('seedDefaultCategories function:', seedDefaultCategories)
       
-      // Call the seed function
-      const result = await seedDefaultCategories()
+  //     // Call the seed function
+  //     const result = await seedDefaultCategories()
       
-      console.log('Seed result:', result)
+  //     console.log('Seed result:', result)
       
-      if (result && result.message) {
-        setSeedMessage(result.message)
-        console.log(`Success: ${result.message}`)
-        console.log('Created:', result.created)
-        console.log('Skipped:', result.skipped)
-        setIsSeeding(false) // Reset loading state on success
-        // Clear message after 8 seconds
-        setTimeout(() => setSeedMessage(null), 8000)
-      } else {
-        console.error('Unexpected result format:', result)
-        setError('Unexpected response from server. Please try again.')
-        setIsSeeding(false)
-      }
-    } catch (error: any) {
-      console.error('Error seeding categories:', error)
-      console.error('Error details:', {
-        message: error?.message,
-        name: error?.name,
-        stack: error?.stack
-      })
+  //     if (result && result.message) {
+  //       setSeedMessage(result.message)
+  //       console.log(`Success: ${result.message}`)
+  //       console.log('Created:', result.created)
+  //       console.log('Skipped:', result.skipped)
+  //       setIsSeeding(false) // Reset loading state on success
+  //       // Clear message after 8 seconds
+  //       setTimeout(() => setSeedMessage(null), 8000)
+  //     } else {
+  //       console.error('Unexpected result format:', result)
+  //       setError('Unexpected response from server. Please try again.')
+  //       setIsSeeding(false)
+  //     }
+  //   } catch (error: any) {
+  //     console.error('Error seeding categories:', error)
+  //     console.error('Error details:', {
+  //       message: error?.message,
+  //       name: error?.name,
+  //       stack: error?.stack
+  //     })
       
-      // Provide more helpful error messages
-      let errorMessage = 'Failed to seed default categories. '
+  //     // Provide more helpful error messages
+  //     let errorMessage = 'Failed to seed default categories. '
       
-      if (error?.message?.includes('Could not find public function') || 
-          error?.message?.includes('not found') ||
-          error?.message?.includes('dashboard/categories:seedDefault')) {
-        errorMessage += 'The Convex function has not been synced. Please run `npx convex dev` in the dashboard directory and wait for functions to sync. Then refresh this page.'
-      } else if (error?.message) {
-        errorMessage += error.message
-      } else {
-        errorMessage += 'Please make sure Convex dev server is running and try again.'
-      }
+  //     if (error?.message?.includes('Could not find public function') || 
+  //         error?.message?.includes('not found') ||
+  //         error?.message?.includes('dashboard/categories:seedDefault')) {
+  //       errorMessage += 'The Convex function has not been synced. Please run `npx convex dev` in the dashboard directory and wait for functions to sync. Then refresh this page.'
+  //     } else if (error?.message) {
+  //       errorMessage += error.message
+  //     } else {
+  //       errorMessage += 'Please make sure Convex dev server is running and try again.'
+  //     }
       
-      setError(errorMessage)
-      setIsSeeding(false)
-    }
-  }
+  //     setError(errorMessage)
+  //     setIsSeeding(false)
+  //   }
+  // }
 
   return (
     <div className="w-full">
@@ -202,11 +202,11 @@ function CategoriesPage() {
       </div>
 
       {/* Seed Success Message */}
-      {seedMessage && (
+      {/* {seedMessage && (
         <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
           <p className="text-sm text-green-700">{seedMessage}</p>
         </div>
-      )}
+      )} */}
 
       {/* Categories List */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">

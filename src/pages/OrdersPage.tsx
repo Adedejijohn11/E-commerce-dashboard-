@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
-import { ShoppingCart, Package, CheckCircle2, Hand, XCircle, Plus } from 'lucide-react'
+import { ShoppingCart, Package, CheckCircle2, Hand, XCircle } from 'lucide-react'
 
 type OrderStatus = 'pending' | 'processing' | 'ready' | 'picked_up' | 'cancelled'
 
 function OrdersPage() {
   const orders = useQuery(api.dashboard.orders.getAll)
   const updateStatus = useMutation(api.dashboard.orders.updateStatus)
-  const generateDummyOrders = useMutation(api.dashboard.seedOrders.generateDummyOrders)
+  // const generateDummyOrders = useMutation(api.dashboard.seedOrders.generateDummyOrders)
   const [filterStatus, setFilterStatus] = useState<OrderStatus | 'all'>('all')
-  const [isGenerating, setIsGenerating] = useState(false)
+  // const [isGenerating, setIsGenerating] = useState(false)
 
   const handleStatusUpdate = async (orderId: string, newStatus: OrderStatus) => {
     try {
@@ -21,22 +21,22 @@ function OrdersPage() {
     }
   }
 
-  const handleGenerateDummyOrders = async () => {
-    if (!confirm('This will create 5 dummy orders. Continue?')) {
-      return
-    }
+  // const handleGenerateDummyOrders = async () => {
+  //   if (!confirm('This will create 5 dummy orders. Continue?')) {
+  //     return
+  //   }
 
-    setIsGenerating(true)
-    try {
-      const result = await generateDummyOrders({ count: 5 })
-      alert(result.message)
-    } catch (error: any) {
-      console.error('Error generating dummy orders:', error)
-      alert(error?.message || 'Failed to generate dummy orders. Make sure you have products created first.')
-    } finally {
-      setIsGenerating(false)
-    }
-  }
+  //   setIsGenerating(true)
+  //   try {
+  //     const result = await generateDummyOrders({ count: 5 })
+  //     alert(result.message)
+  //   } catch (error: any) {
+  //     console.error('Error generating dummy orders:', error)
+  //     alert(error?.message || 'Failed to generate dummy orders. Make sure you have products created first.')
+  //   } finally {
+  //     setIsGenerating(false)
+  //   }
+  // }
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
