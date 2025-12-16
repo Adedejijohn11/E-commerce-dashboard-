@@ -35,7 +35,8 @@ function ProductForm({ productId, onClose }: ProductFormProps) {
   
   // Get categories for dropdown
   const categories = useQuery(api.dashboard.categories.getAll)
-  const createPromotion = useMutation(api.frontend.promotions.create)
+  const createPromotion = useMutation(api.dashboard.promotions.create)
+  const removePromotion = useMutation(api.dashboard.promotions.remove)
 
   const product = useQuery(
     api.dashboard.products.getById,
@@ -170,7 +171,7 @@ function ProductForm({ productId, onClose }: ProductFormProps) {
         savedProductId = await createProduct(productData)
       }
 
-      // Handle promotion
+      // Handle promotion: create when checked, remove when unchecked
       if (isOnSale && discountPercentage && saleStartDate && saleEndDate) {
         const startDate = new Date(saleStartDate).getTime()
         const endDate = new Date(saleEndDate).getTime()
@@ -189,6 +190,14 @@ function ProductForm({ productId, onClose }: ProductFormProps) {
             // Don't fail the whole operation if promotion fails
             setError(`Product saved but promotion failed: ${promoError?.message || 'Unknown error'}`)
           }
+        }
+      } else {
+        // If sale is unchecked, remove the promotion and restore original price
+        try {
+          await removePromotion({ productId: savedProductId })
+        } catch (promoError: any) {
+          console.error('Error removing promotion:', promoError)
+          setError(`Product saved but removing promotion failed: ${promoError?.message || 'Unknown error'}`)
         }
       }
 
